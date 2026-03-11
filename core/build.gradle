@@ -10,7 +10,7 @@ dependencies {
 
 task includeVersion {
     doLast {
-        ext.versionDir = new File("${buildDir}", "generated/tech/kwik/flupke/impl")
+        ext.versionDir = new File("${buildDir}", "generated/tech/kwik/flupke")
         versionDir.mkdirs()
 
         new File(versionDir, "version.properties").text = project.version
