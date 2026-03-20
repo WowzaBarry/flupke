@@ -197,6 +197,7 @@ public class Http3ClientConnectionImpl extends Http3ConnectionImpl implements Ht
 
         builder.socketFactory(datagramSocketFactory);
         builder.logger(logger != null? logger: new NullLogger());
+        builder.enableDatagramExtension();
         return builder.build();
     }
 

@@ -33,11 +33,6 @@ import java.util.function.Consumer;
 
 public class WebTransportExtensionFactory implements Http3ServerExtensionFactory {
 
-    // https://www.ietf.org/archive/id/draft-ietf-webtrans-http3-13.html#section-9.2
-    // "Setting Name: WT_MAX_SESSIONS
-    //  Value: 0x14e9cd29
-    public static final long WT_MAX_SESSIONS = 0x14e9cd29L;
-
     private final Map<String, Consumer<Session>> webTransportHandlers = new HashMap<>();
     private ExecutorService executor = Executors.newCachedThreadPool(new DaemonThreadFactory("webtransport"));
 
@@ -48,10 +43,15 @@ public class WebTransportExtensionFactory implements Http3ServerExtensionFactory
 
     @Override
     public Map<Long, Long> getExtensionSettings() {
-        // https://www.ietf.org/archive/id/draft-ietf-webtrans-http3-13.html#section-3.1
-        // "A server supporting WebTransport over HTTP/3 MUST send both the SETTINGS_WT_MAX_SESSIONS setting with
-        //  a value greater than "0" ..."
-        return Map.of(WT_MAX_SESSIONS, 1L);
+        // Advertise all WebTransport setting variants for cross-implementation compatibility.
+        Map<Long, Long> settings = new HashMap<>();
+        settings.put(AbstractSessionFactoryImpl.SETTINGS_WT_MAX_SESSIONS, 1L);
+        settings.put(AbstractSessionFactoryImpl.SETTINGS_WT_MAX_SESSIONS_DRAFT13, 1L);
+        settings.put(AbstractSessionFactoryImpl.SETTINGS_WT_ENABLE_DEPRECATED, 1L);
+        settings.put(AbstractSessionFactoryImpl.SETTINGS_WT_MAX_SESSIONS_DEPRECATED, 1L);
+        settings.put(AbstractSessionFactoryImpl.SETTINGS_ENABLE_DATAGRAM, 1L);
+        settings.put(AbstractSessionFactoryImpl.SETTINGS_ENABLE_DATAGRAM_DEPRECATED, 1L);
+        return settings;
     }
 
     /**

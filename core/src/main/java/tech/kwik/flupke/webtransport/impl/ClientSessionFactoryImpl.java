@@ -63,16 +63,25 @@ public class ClientSessionFactoryImpl extends AbstractSessionFactoryImpl impleme
             HttpRequest request = HttpRequest.newBuilder(new URI("https://" + server + ":" + serverPort)).build();
             httpClientConnection = httpClient.createConnection(request);
 
-            // https://www.ietf.org/archive/id/draft-ietf-webtrans-http3-13.html#section-3.1
-            // "A client supporting WebTransport over HTTP/3 MUST send the SETTINGS_WT_MAX_SESSIONS setting with a value greater than "0"."
+            // Send all WebTransport setting variants for maximum cross-implementation compatibility.
+            // Current (draft-06+)
             httpClientConnection.addSettingsParameter(SETTINGS_WT_MAX_SESSIONS, 1);
+            // Draft-13 (used by moqtail.dev / older Flupke servers)
+            httpClientConnection.addSettingsParameter(SETTINGS_WT_MAX_SESSIONS_DRAFT13, 1);
+            // Deprecated variants (used by some servers)
+            httpClientConnection.addSettingsParameter(SETTINGS_WT_ENABLE_DEPRECATED, 1);
+            httpClientConnection.addSettingsParameter(SETTINGS_WT_MAX_SESSIONS_DEPRECATED, 1);
+            // H3 datagram support (RFC 9297) — current and deprecated (Chrome still sends deprecated)
+            httpClientConnection.addSettingsParameter(SETTINGS_ENABLE_DATAGRAM, 1);
+            httpClientConnection.addSettingsParameter(SETTINGS_ENABLE_DATAGRAM_DEPRECATED, 1);
             httpClientConnection.connect();
 
-            // https://www.ietf.org/archive/id/draft-ietf-webtrans-http3-13.html#section-5.2
-            // "This document defines a SETTINGS_WT_MAX_SESSIONS setting that allows the server to limit the maximum number
-            //  of concurrent WebTransport sessions on a single HTTP/3 connection.
-            //  The client MUST NOT open more simultaneous sessions than indicated in the server SETTINGS parameter. "
-            maxSessions = httpClientConnection.getPeerSettingsParameter(SETTINGS_WT_MAX_SESSIONS).orElse(0L);
+            // Check all WT_MAX_SESSIONS variants the server might advertise.
+            // Default to unlimited (Long.MAX_VALUE) since many servers omit this setting.
+            maxSessions = httpClientConnection.getPeerSettingsParameter(SETTINGS_WT_MAX_SESSIONS)
+                .or(() -> httpClientConnection.getPeerSettingsParameter(SETTINGS_WT_MAX_SESSIONS_DRAFT13))
+                .or(() -> httpClientConnection.getPeerSettingsParameter(SETTINGS_WT_MAX_SESSIONS_DEPRECATED))
+                .orElse(Long.MAX_VALUE);
 
             httpClientConnection.registerUnidirectionalStreamType(STREAM_TYPE_WEBTRANSPORT, this::handleUnidirectionalStream);
             httpClientConnection.registerBidirectionalStreamHandler(this::handleBidirectionalStream);

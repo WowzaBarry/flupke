@@ -34,12 +34,17 @@ import static tech.kwik.flupke.webtransport.Constants.WEBTRANSPORT_SESSION_GONE;
 
 public abstract class AbstractSessionFactoryImpl implements SessionFactory {
 
-    // https://www.ietf.org/archive/id/draft-ietf-webtrans-http3-13.html#section-9.2
-    // "The SETTINGS_WT_MAX_SESSIONS setting indicates that the specified HTTP/3 endpoint is WebTransport-capable and
-    //  the number of concurrent sessions it is willing to receive."
-    // "Setting Name: WT_MAX_SESSIONS
-    //  Value: 0x14e9cd29"
-    public static final long SETTINGS_WT_MAX_SESSIONS = 0x14e9cd29L;
+    // WebTransport setting IDs — multiple variants for cross-draft compatibility.
+    // draft-ietf-webtrans-http3-13: 0x14e9cd29
+    public static final long SETTINGS_WT_MAX_SESSIONS_DRAFT13 = 0x14e9cd29L;
+    // draft-06+ (current): 0xc671706a
+    public static final long SETTINGS_WT_MAX_SESSIONS = 0xc671706aL;
+    // Deprecated (removed in draft-06): used by older servers
+    public static final long SETTINGS_WT_ENABLE_DEPRECATED = 0x2b603742L;
+    public static final long SETTINGS_WT_MAX_SESSIONS_DEPRECATED = 0x2b603743L;
+    // H3 datagram settings
+    public static final long SETTINGS_ENABLE_DATAGRAM = 0x33L;
+    public static final long SETTINGS_ENABLE_DATAGRAM_DEPRECATED = 0xFFD277L;
 
     protected final Map<Long, SessionImpl> sessionRegistry = new ConcurrentHashMap<>();
     private final ReentrantLock registrationLock = new ReentrantLock();

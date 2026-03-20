@@ -312,7 +312,7 @@ public class Http3ConnectionImpl implements Http3Connection {
             OutputStream clientControlOutput = clientControlStream.getOutputStream();
             clientControlOutput.write(STREAM_TYPE_CONTROL_STREAM);
 
-            SettingsFrame settingsFrame = new SettingsFrame();
+            SettingsFrame settingsFrame = new SettingsFrame(0, 0, true);
             settingsFrame.addParameters(settingsParameters);
             ByteBuffer serializedSettings = settingsFrame.getBytes();
             clientControlStream.getOutputStream().write(serializedSettings.array(), 0, serializedSettings.limit());
