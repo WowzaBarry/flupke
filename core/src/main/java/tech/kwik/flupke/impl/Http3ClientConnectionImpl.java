@@ -434,7 +434,13 @@ public class Http3ClientConnectionImpl extends Http3ConnectionImpl implements Ht
         QuicStream httpStream = quicConnection.createStream(true);
         httpStream.getOutputStream().write(headersFrame.toBytes(qpackEncoder));
 
-        Http3Frame responseFrame = readFrame(httpStream.getInputStream());
+        // RFC 9114 §7.2.8: unknown frame types on a request stream MUST be ignored.
+        // Loop past any unknown/GREASE frames until we get the actual response.
+        Http3Frame responseFrame;
+        do {
+            responseFrame = readFrame(httpStream.getInputStream());
+        } while (responseFrame instanceof UnknownFrame);
+
         if (responseFrame instanceof HeadersFrame) {
             HttpResponseInfo responseInfo;
             try {
